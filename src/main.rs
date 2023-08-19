@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-
 use ggez::{
     event,
     graphics::{self, Color},
@@ -7,10 +5,11 @@ use ggez::{
 };
 
 const MAZE_CELL_SIZE: (i16, i16) = (10, 10);
-const MAZE_SIZE: (usize, usize) = (95, 75);
+const PATH_WIDTH: i16 = 3;
+const MAZE_SIZE: (usize, usize) = (40, 25);
 const SCREEN_SIZE: (f32, f32) = (
-    MAZE_SIZE.0 as f32 * MAZE_CELL_SIZE.0 as f32,
-    MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE.1 as f32,
+    MAZE_SIZE.0 as f32 * MAZE_CELL_SIZE.0 as f32 * PATH_WIDTH as f32,
+    MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE.1 as f32 * PATH_WIDTH as f32,
 );
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -24,14 +23,26 @@ impl MazeCell {
     fn new(x: i16, y: i16, visited: bool) -> Self {
         Self { x, y, visited }
     }
-}
 
-impl From<(i16, i16)> for MazeCell {
-    fn from(value: (i16, i16)) -> Self {
-        MazeCell {
-            x: value.0,
-            y: value.1,
-            visited: false,
+    fn draw(&self, canvas: &mut ggez::graphics::Canvas) {
+        let cell_color = match self.visited {
+            true => Color::WHITE,
+            false => Color::BLUE,
+        };
+
+        for x in 0..PATH_WIDTH - 1 {
+            for y in 0..PATH_WIDTH - 1 {
+                let mut new_cell = self.clone();
+                new_cell.x += x;
+                new_cell.y += y;
+
+                canvas.draw(
+                    &graphics::Quad,
+                    graphics::DrawParam::new()
+                        .dest_rect(new_cell.into())
+                        .color(cell_color),
+                );
+            }
         }
     }
 }
@@ -52,7 +63,6 @@ struct Maze {
     height: usize,
     cells_stack: Vec<MazeCell>,
     visited_cells: i32,
-    path_width: i16,
 }
 
 impl Maze {
@@ -60,7 +70,9 @@ impl Maze {
         let mut cells_stack = Vec::with_capacity(width * height);
         for x in 0..width {
             for y in 0..height {
-                cells_stack.push(MazeCell::new(x as i16, y as i16, false));
+                let px = x as i16 * PATH_WIDTH + 1;
+                let py = y as i16 * PATH_WIDTH + 1;
+                cells_stack.push(MazeCell::new(px, py, false));
             }
         }
 
@@ -69,38 +81,12 @@ impl Maze {
             height,
             cells_stack,
             visited_cells: 0,
-            path_width: 3,
         }
     }
 
     fn draw(&self, canvas: &mut ggez::graphics::Canvas) {
         for cell in &self.cells_stack {
-
-            for px in 0..self.path_width {
-                for py in 0..self.path_width {
-                    let mut new_cell = cell.clone();
-                    new_cell.x *= self.path_width + 1;
-                    new_cell.y *= self.path_width + 1;
-                    new_cell.x += px;
-                    new_cell.y += py;
-
-                    if cell.visited {
-                        canvas.draw(
-                            &graphics::Quad,
-                            graphics::DrawParam::new()
-                                .dest_rect(new_cell.into())
-                                .color(Color::WHITE),
-                        );
-                    } else {
-                        canvas.draw(
-                            &graphics::Quad,
-                            graphics::DrawParam::new()
-                                .dest_rect(new_cell.into())
-                                .color(Color::BLUE),
-                        );
-                    }
-                }
-            }
+            cell.draw(canvas);
         }
     }
 }
@@ -124,6 +110,10 @@ impl ggez::event::EventHandler<GameError> for State {
     }
 }
 
+
+
+// mat[x][y] => vec[y * width + x]
+
 fn main() -> GameResult {
     let window_dimensions =
         ggez::conf::WindowMode::default().dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1);
@@ -134,6 +124,10 @@ fn main() -> GameResult {
 
     let mut maze = Maze::new(MAZE_SIZE.0, MAZE_SIZE.1);
     maze.cells_stack[0].visited = true;
+    maze.cells_stack[2].visited = true;
+
+    maze.cells_stack[MAZE_SIZE.1 + 1].visited = true;
+    
     maze.visited_cells = 1;
 
     let state = State { maze };
