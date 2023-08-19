@@ -7,7 +7,7 @@ use ggez::{
 };
 
 const MAZE_CELL_SIZE: (i16, i16) = (10, 10);
-const MAZE_SIZE: (usize, usize) = (95, 70);
+const MAZE_SIZE: (usize, usize) = (95, 75);
 const SCREEN_SIZE: (f32, f32) = (
     MAZE_SIZE.0 as f32 * MAZE_CELL_SIZE.0 as f32,
     MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE.1 as f32,
@@ -75,24 +75,31 @@ impl Maze {
 
     fn draw(&self, canvas: &mut ggez::graphics::Canvas) {
         for cell in &self.cells_stack {
-            let mut new_cell = cell.clone();
-            new_cell.x *= self.path_width + 1;
-            new_cell.y *= self.path_width + 1;
 
-            if cell.visited {
-                canvas.draw(
-                    &graphics::Quad,
-                    graphics::DrawParam::new()
-                        .dest_rect(new_cell.into())
-                        .color(Color::BLUE),
-                );
-            } else {
-                canvas.draw(
-                    &graphics::Quad,
-                    graphics::DrawParam::new()
-                        .dest_rect(new_cell.into())
-                        .color(Color::RED),
-                );
+            for px in 0..self.path_width {
+                for py in 0..self.path_width {
+                    let mut new_cell = cell.clone();
+                    new_cell.x *= self.path_width + 1;
+                    new_cell.y *= self.path_width + 1;
+                    new_cell.x += px;
+                    new_cell.y += py;
+
+                    if cell.visited {
+                        canvas.draw(
+                            &graphics::Quad,
+                            graphics::DrawParam::new()
+                                .dest_rect(new_cell.into())
+                                .color(Color::BLUE),
+                        );
+                    } else {
+                        canvas.draw(
+                            &graphics::Quad,
+                            graphics::DrawParam::new()
+                                .dest_rect(new_cell.into())
+                                .color(Color::RED),
+                        );
+                    }
+                }
             }
         }
     }
