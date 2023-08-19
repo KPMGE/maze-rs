@@ -89,14 +89,14 @@ impl Maze {
                             &graphics::Quad,
                             graphics::DrawParam::new()
                                 .dest_rect(new_cell.into())
-                                .color(Color::BLUE),
+                                .color(Color::WHITE),
                         );
                     } else {
                         canvas.draw(
                             &graphics::Quad,
                             graphics::DrawParam::new()
                                 .dest_rect(new_cell.into())
-                                .color(Color::RED),
+                                .color(Color::BLUE),
                         );
                     }
                 }
@@ -115,7 +115,7 @@ impl ggez::event::EventHandler<GameError> for State {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> Result<(), GameError> {
-        let mut canvas = graphics::Canvas::from_frame(ctx, Color::WHITE);
+        let mut canvas = graphics::Canvas::from_frame(ctx, Color::BLACK);
         self.maze.draw(&mut canvas);
 
         canvas.finish(ctx)?;
