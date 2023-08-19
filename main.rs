@@ -7,7 +7,7 @@ use ggez::{
 };
 
 const MAZE_CELL_SIZE: (i16, i16) = (10, 10);
-const MAZE_SIZE: (usize, usize) = (95, 70);
+const MAZE_SIZE: (usize, usize) = (95, 65);
 const SCREEN_SIZE: (f32, f32) = (
     MAZE_SIZE.0 as f32 * MAZE_CELL_SIZE.0 as f32,
     MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE.1 as f32,
@@ -58,11 +58,8 @@ struct Maze {
 impl Maze {
     fn new(width: usize, height: usize) -> Self {
         let mut cells_stack = Vec::with_capacity(width * height);
-        for x in 0..width {
-            for y in 0..height {
-                cells_stack.push(MazeCell::new(x as i16, y as i16, false));
-            }
-        }
+
+
 
         Self {
             width,
@@ -74,27 +71,44 @@ impl Maze {
     }
 
     fn draw(&self, canvas: &mut ggez::graphics::Canvas) {
-        for cell in &self.cells_stack {
-            let mut new_cell = cell.clone();
-            new_cell.x *= self.path_width + 1;
-            new_cell.y *= self.path_width + 1;
+        for x in 0..self.height {
+            for y in 0..self.width {
+                let idx = y * self.path_width as usize + x;
+                let mut cell = self.cells_stack[idx].clone();
 
-            if cell.visited {
-                canvas.draw(
-                    &graphics::Quad,
-                    graphics::DrawParam::new()
-                        .dest_rect(new_cell.into())
-                        .color(Color::BLUE),
-                );
-            } else {
-                canvas.draw(
-                    &graphics::Quad,
-                    graphics::DrawParam::new()
-                        .dest_rect(new_cell.into())
-                        .color(Color::RED),
-                );
+                cell.x *= self.path_width + 1;
+                cell.y *= self.path_width + 1;
+
+                if cell.visited {
+                    canvas.draw(
+                        &graphics::Quad,
+                        graphics::DrawParam::new()
+                            .dest_rect(cell.into())
+                            .color(Color::BLUE),
+                    );
+                } else {
+                    canvas.draw(
+                        &graphics::Quad,
+                        graphics::DrawParam::new()
+                            .dest_rect(cell.into())
+                            .color(Color::RED),
+                    );
+                }
             }
         }
+
+        // for cell in &self.cells_stack {
+        //     let mut new_cell = cell.clone();
+        //     new_cell.x *= self.path_width + 1;
+        //     new_cell.y *= self.path_width + 1;
+
+        //     canvas.draw(
+        //         &graphics::Quad,
+        //         graphics::DrawParam::new()
+        //             .dest_rect(new_cell.into())
+        //             .color(Color::BLUE),
+        //     );
+        // }
     }
 }
 
@@ -109,6 +123,7 @@ impl ggez::event::EventHandler<GameError> for State {
 
     fn draw(&mut self, ctx: &mut Context) -> Result<(), GameError> {
         let mut canvas = graphics::Canvas::from_frame(ctx, Color::WHITE);
+
         self.maze.draw(&mut canvas);
 
         canvas.finish(ctx)?;
@@ -126,7 +141,7 @@ fn main() -> GameResult {
         .build()?;
 
     let mut maze = Maze::new(MAZE_SIZE.0, MAZE_SIZE.1);
-    maze.cells_stack[0].visited = true;
+    maze.cells_stack.push(MazeCell::new(0, 0, true));
     maze.visited_cells = 1;
 
     let state = State { maze };
