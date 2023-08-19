@@ -13,15 +13,29 @@ const SCREEN_SIZE: (f32, f32) = (
 );
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum CellPath {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 struct MazeCell {
     x: i16,
     y: i16,
     visited: bool,
+    path: Option<CellPath>,
 }
 
 impl MazeCell {
     fn new(x: i16, y: i16, visited: bool) -> Self {
-        Self { x, y, visited }
+        Self {
+            x,
+            y,
+            visited,
+            path: None,
+        }
     }
 
     fn draw(&self, canvas: &mut ggez::graphics::Canvas) {
@@ -29,6 +43,34 @@ impl MazeCell {
             true => Color::WHITE,
             false => Color::BLUE,
         };
+
+        if let Some(path) = self.path {
+            match path {
+                CellPath::RIGHT => {
+                    for py in 0..PATH_WIDTH - 1 {
+                        let mut new_cell = self.clone();
+                        new_cell.x += PATH_WIDTH + 2;
+                        new_cell.y += PATH_WIDTH + py;
+
+                        canvas.draw(
+                            &graphics::Quad,
+                            graphics::DrawParam::new()
+                                .dest_rect(new_cell.into())
+                                .color(cell_color),
+                        );
+                    }
+                }
+                CellPath::LEFT => {
+                    todo!()
+                }
+                CellPath::UP => {
+                    todo!()
+                }
+                CellPath::DOWN => {
+                    todo!()
+                }
+            }
+        }
 
         for x in 0..PATH_WIDTH - 1 {
             for y in 0..PATH_WIDTH - 1 {
@@ -110,8 +152,6 @@ impl ggez::event::EventHandler<GameError> for State {
     }
 }
 
-
-
 // mat[x][y] => vec[y * width + x]
 
 fn main() -> GameResult {
@@ -124,10 +164,12 @@ fn main() -> GameResult {
 
     let mut maze = Maze::new(MAZE_SIZE.0, MAZE_SIZE.1);
     maze.cells_stack[0].visited = true;
+    maze.cells_stack[0].path = Some(CellPath::RIGHT);
+
     maze.cells_stack[2].visited = true;
 
     maze.cells_stack[MAZE_SIZE.1 + 1].visited = true;
-    
+
     maze.visited_cells = 1;
 
     let state = State { maze };
