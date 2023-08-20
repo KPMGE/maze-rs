@@ -67,7 +67,18 @@ impl MazeCell {
                     todo!()
                 }
                 CellPath::DOWN => {
-                    todo!()
+                    for px in 0..PATH_WIDTH {
+                        let mut new_cell = self.clone();
+                        new_cell.x += px;
+                        new_cell.y += PATH_WIDTH;
+
+                        canvas.draw(
+                            &graphics::Quad,
+                            graphics::DrawParam::new()
+                                .dest_rect(new_cell.into())
+                                .color(cell_color),
+                        );
+                    }
                 }
             }
         }
@@ -167,7 +178,7 @@ fn main() -> GameResult {
     maze.cells_stack[0].path = Some(CellPath::RIGHT);
 
     maze.cells_stack[2].visited = true;
-    // maze.cells_stack[2].path = Some(CellPath::DOWN);
+    maze.cells_stack[2].path = Some(CellPath::DOWN);
 
     maze.cells_stack[MAZE_SIZE.1 + 1].visited = true;
 
