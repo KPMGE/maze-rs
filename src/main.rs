@@ -47,10 +47,10 @@ impl MazeCell {
         if let Some(path) = self.path {
             match path {
                 CellPath::RIGHT => {
-                    for py in 0..PATH_WIDTH - 1 {
+                    for py in 0..PATH_WIDTH {
                         let mut new_cell = self.clone();
-                        new_cell.x += PATH_WIDTH + 2;
-                        new_cell.y += PATH_WIDTH + py;
+                        new_cell.x += PATH_WIDTH;
+                        new_cell.y += py;
 
                         canvas.draw(
                             &graphics::Quad,
@@ -72,8 +72,8 @@ impl MazeCell {
             }
         }
 
-        for x in 0..PATH_WIDTH - 1 {
-            for y in 0..PATH_WIDTH - 1 {
+        for x in 0..PATH_WIDTH {
+            for y in 0..PATH_WIDTH {
                 let mut new_cell = self.clone();
                 new_cell.x += x;
                 new_cell.y += y;
@@ -109,11 +109,11 @@ struct Maze {
 
 impl Maze {
     fn new(width: usize, height: usize) -> Self {
-        let mut cells_stack = Vec::with_capacity(width * height);
+        let mut cells_stack = Vec::with_capacity(width * height * PATH_WIDTH as usize * 2);
         for x in 0..width {
             for y in 0..height {
-                let px = x as i16 * PATH_WIDTH + 1;
-                let py = y as i16 * PATH_WIDTH + 1;
+                let px = x as i16 * (PATH_WIDTH + 1);
+                let py = y as i16 * (PATH_WIDTH + 1);
                 cells_stack.push(MazeCell::new(px, py, false));
             }
         }
@@ -167,6 +167,7 @@ fn main() -> GameResult {
     maze.cells_stack[0].path = Some(CellPath::RIGHT);
 
     maze.cells_stack[2].visited = true;
+    // maze.cells_stack[2].path = Some(CellPath::DOWN);
 
     maze.cells_stack[MAZE_SIZE.1 + 1].visited = true;
 
