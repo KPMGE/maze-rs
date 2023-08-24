@@ -1,8 +1,4 @@
-use ggez::{
-    event,
-    graphics::{self, Color},
-    Context, GameError, GameResult,
-};
+use ggez::{graphics::Color, GameError, GameResult};
 
 const MAZE_CELL_SIZE: (i16, i16) = (10, 10);
 const PATH_WIDTH: i16 = 3;
@@ -12,214 +8,262 @@ const SCREEN_SIZE: (f32, f32) = (
     MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE.1 as f32 * PATH_WIDTH as f32,
 );
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-enum CellPath {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT,
+#[derive(Debug, Clone)]
+enum Path {
+    Left,
+    Right,
+    Up,
+    Down,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-struct MazeCell {
-    x: i16,
-    y: i16,
+#[derive(Debug, Clone)]
+struct Cell {
     visited: bool,
-    path: Option<CellPath>,
+    paths: Vec<Path>,
 }
 
-impl MazeCell {
-    fn new(x: i16, y: i16, visited: bool) -> Self {
-        Self {
-            x,
-            y,
-            visited,
-            path: None,
-        }
-    }
-
-    fn draw(&self, canvas: &mut ggez::graphics::Canvas) {
-        let cell_color = match self.visited {
-            true => Color::WHITE,
-            false => Color::BLUE,
-        };
-
-        if let Some(path) = self.path {
-            match path {
-                CellPath::RIGHT => {
-                    for py in 0..PATH_WIDTH {
-                        let mut new_cell = self.clone();
-                        new_cell.x += PATH_WIDTH;
-                        new_cell.y += py;
-
-                        canvas.draw(
-                            &graphics::Quad,
-                            graphics::DrawParam::new()
-                                .dest_rect(new_cell.into())
-                                .color(cell_color),
-                        );
-                    }
-                }
-                CellPath::LEFT => {
-                    for py in 0..PATH_WIDTH {
-                        let mut new_cell = self.clone();
-
-                        if new_cell.x > 0 {
-                            new_cell.x -= 1;
-                        }
-
-                        new_cell.y += py;
-
-                        canvas.draw(
-                            &graphics::Quad,
-                            graphics::DrawParam::new()
-                                .dest_rect(new_cell.into())
-                                .color(cell_color),
-                        );
-                    }
-                }
-                CellPath::UP => {
-                    for px in 0..PATH_WIDTH {
-                        let mut new_cell = self.clone();
-
-                        if new_cell.y > 0 {
-                            new_cell.y -= 1;
-                        }
-
-                        new_cell.x += px;
-
-                        canvas.draw(
-                            &graphics::Quad,
-                            graphics::DrawParam::new()
-                                .dest_rect(new_cell.into())
-                                .color(cell_color),
-                        );
-                    }
-                }
-                CellPath::DOWN => {
-                    for px in 0..PATH_WIDTH {
-                        let mut new_cell = self.clone();
-                        new_cell.x += px;
-                        new_cell.y += PATH_WIDTH;
-
-                        canvas.draw(
-                            &graphics::Quad,
-                            graphics::DrawParam::new()
-                                .dest_rect(new_cell.into())
-                                .color(cell_color),
-                        );
-                    }
-                }
-            }
-        }
-
-        for x in 0..PATH_WIDTH {
-            for y in 0..PATH_WIDTH {
-                let mut new_cell = self.clone();
-                new_cell.x += x;
-                new_cell.y += y;
-
-                canvas.draw(
-                    &graphics::Quad,
-                    graphics::DrawParam::new()
-                        .dest_rect(new_cell.into())
-                        .color(cell_color),
-                );
-            }
-        }
-    }
-}
-
-impl From<MazeCell> for graphics::Rect {
-    fn from(pos: MazeCell) -> Self {
-        graphics::Rect::new_i32(
-            pos.x as i32 * MAZE_CELL_SIZE.0 as i32,
-            pos.y as i32 * MAZE_CELL_SIZE.1 as i32,
-            MAZE_CELL_SIZE.0 as i32,
-            MAZE_CELL_SIZE.1 as i32,
-        )
-    }
-}
-
+#[derive(Debug)]
 struct Maze {
-    width: usize,
     height: usize,
-    cells_stack: Vec<MazeCell>,
-    visited_cells: i32,
+    width: usize,
+    cells: Vec<Vec<Cell>>,
 }
 
 impl Maze {
     fn new(width: usize, height: usize) -> Self {
-        let mut cells_stack = Vec::with_capacity(width * height * PATH_WIDTH as usize * 2);
-        for x in 0..width {
-            for y in 0..height {
-                let px = x as i16 * (PATH_WIDTH + 1);
-                let py = y as i16 * (PATH_WIDTH + 1);
-                cells_stack.push(MazeCell::new(px, py, false));
-            }
-        }
+        let cells = vec![
+            vec![
+                Cell {
+                    visited: false,
+                    paths: Vec::new()
+                };
+                width
+            ];
+            height
+        ];
 
         Self {
-            width,
+            cells,
             height,
-            cells_stack,
-            visited_cells: 0,
+            width,
         }
     }
 
-    fn draw(&self, canvas: &mut ggez::graphics::Canvas) {
-        for cell in &self.cells_stack {
-            cell.draw(canvas);
+    fn get_cell(&self, x: usize, y: usize) -> Option<Cell> {
+        self.cells.get(y).and_then(|row| row.get(x).cloned())
+    }
+
+    fn set_cell(&mut self, x: usize, y: usize, value: Cell) {
+        if let Some(row_ref) = self.cells.get_mut(x) {
+            if let Some(col_ref) = row_ref.get_mut(y) {
+                *col_ref = value;
+            }
         }
     }
+}
+
+#[derive(Debug)]
+struct MazeRenderer {
+    maze: Maze,
+    cell_size: f32,
 }
 
 struct State {
-    maze: Maze,
+    maze_renderer: MazeRenderer,
 }
 
-impl ggez::event::EventHandler<GameError> for State {
-    fn update(&mut self, _ctx: &mut Context) -> Result<(), GameError> {
-        Ok(())
-    }
+impl ggez::event::EventHandler for State {
+    fn draw(&mut self, ctx: &mut ggez::Context) -> Result<(), GameError> {
+        let mut canvas = ggez::graphics::Canvas::from_frame(ctx, Color::BLACK);
+        let height = self.maze_renderer.maze.height;
+        let width = self.maze_renderer.maze.width;
 
-    fn draw(&mut self, ctx: &mut Context) -> Result<(), GameError> {
-        let mut canvas = graphics::Canvas::from_frame(ctx, Color::BLACK);
-        self.maze.draw(&mut canvas);
+        for x in 0..height {
+            for y in 0..width {
+                if let Some(cell) = self.maze_renderer.maze.get_cell(x, y) {
+                    let color = if cell.visited {
+                        Color::WHITE
+                    } else {
+                        Color::BLUE
+                    };
+                    let cell_size = self.maze_renderer.cell_size;
+
+                    for px in 0..PATH_WIDTH {
+                        for py in 0..PATH_WIDTH {
+                            let rect = ggez::graphics::Rect::new(
+                                (x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                    + (px as f32 * cell_size),
+                                (y as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                    + (py as f32 * cell_size),
+                                cell_size,
+                                cell_size,
+                            );
+
+                            canvas.draw(
+                                &ggez::graphics::Quad,
+                                ggez::graphics::DrawParam::new()
+                                    .dest_rect(rect)
+                                    .color(color),
+                            );
+                        }
+                    }
+
+                    for path in cell.paths {
+                        match path {
+                            Path::Right => {
+                                for k in 0..PATH_WIDTH {
+                                    let px = PATH_WIDTH;
+                                    let py = k;
+
+                                    let rect = ggez::graphics::Rect::new(
+                                        (x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                            + (px as f32 * cell_size),
+                                        (y as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                            + (py as f32 * cell_size),
+                                        cell_size,
+                                        cell_size,
+                                    );
+
+                                    canvas.draw(
+                                        &ggez::graphics::Quad,
+                                        ggez::graphics::DrawParam::new()
+                                            .dest_rect(rect)
+                                            .color(Color::WHITE),
+                                    );
+                                }
+                            }
+                            Path::Up => {
+                                for k in 0..PATH_WIDTH {
+                                    let px = k;
+                                    let py = -1;
+
+                                    let rect = ggez::graphics::Rect::new(
+                                        (x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                            + (px as f32 * cell_size),
+                                        (y as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                            + (py as f32 * cell_size),
+                                        cell_size,
+                                        cell_size,
+                                    );
+
+                                    canvas.draw(
+                                        &ggez::graphics::Quad,
+                                        ggez::graphics::DrawParam::new()
+                                            .dest_rect(rect)
+                                            .color(Color::WHITE),
+                                    );
+                                }
+                            }
+                            Path::Left => {
+                                for k in 0..PATH_WIDTH {
+                                    let px = -1;
+                                    let py = k;
+
+                                    let rect = ggez::graphics::Rect::new(
+                                        (x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                            + (px as f32 * cell_size),
+                                        (y as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                            + (py as f32 * cell_size),
+                                        cell_size,
+                                        cell_size,
+                                    );
+
+                                    canvas.draw(
+                                        &ggez::graphics::Quad,
+                                        ggez::graphics::DrawParam::new()
+                                            .dest_rect(rect)
+                                            .color(Color::WHITE),
+                                    );
+                                }
+                            }
+                            Path::Down => {
+                                for k in 0..PATH_WIDTH {
+                                    let px = k;
+                                    let py = PATH_WIDTH;
+
+                                    let rect = ggez::graphics::Rect::new(
+                                        (x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                            + (px as f32 * cell_size),
+                                        (y as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                            + (py as f32 * cell_size),
+                                        cell_size,
+                                        cell_size,
+                                    );
+
+                                    canvas.draw(
+                                        &ggez::graphics::Quad,
+                                        ggez::graphics::DrawParam::new()
+                                            .dest_rect(rect)
+                                            .color(Color::WHITE),
+                                    );
+                                }
+                            }
+                        };
+                    }
+                }
+            }
+        }
 
         canvas.finish(ctx)?;
 
         Ok(())
     }
+
+    fn update(&mut self, _ctx: &mut ggez::Context) -> Result<(), GameError> {
+        Ok(())
+    }
 }
 
-// mat[x][y] => vec[y * width + x]
-
 fn main() -> GameResult {
+    let mut state = State {
+        maze_renderer: MazeRenderer {
+            maze: Maze::new(MAZE_SIZE.0, MAZE_SIZE.1),
+            cell_size: MAZE_CELL_SIZE.0 as f32,
+        },
+    };
+
+    state.maze_renderer.maze.set_cell(
+        0,
+        1,
+        Cell {
+            visited: true,
+            paths: vec![Path::Right],
+        },
+    );
+
+    state.maze_renderer.maze.set_cell(
+        1,
+        3,
+        Cell {
+            visited: true,
+            paths: vec![Path::Up],
+        },
+    );
+
+    state.maze_renderer.maze.set_cell(
+        2,
+        5,
+        Cell {
+            visited: true,
+            paths: vec![Path::Left],
+        },
+    );
+
+
+    state.maze_renderer.maze.set_cell(
+        3,
+        6,
+        Cell {
+            visited: true,
+            paths: vec![Path::Down],
+        },
+    );
+
     let window_dimensions =
         ggez::conf::WindowMode::default().dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1);
-
-    let (ctx, event_loop) = ggez::ContextBuilder::new("maze", "Kevin Carvalho")
+    let (ctx, event_loop) = ggez::ContextBuilder::new("maze-rs", "Kevin Carvalho")
         .window_mode(window_dimensions)
         .build()?;
 
-    let mut maze = Maze::new(MAZE_SIZE.0, MAZE_SIZE.1);
-    maze.cells_stack[0].visited = true;
-    maze.cells_stack[0].path = Some(CellPath::RIGHT);
-
-    maze.cells_stack[2].visited = true;
-    maze.cells_stack[2].path = Some(CellPath::DOWN);
-
-    maze.cells_stack[MAZE_SIZE.1 + 1].visited = true;
-    maze.cells_stack[MAZE_SIZE.1 + 1].path = Some(CellPath::LEFT);
-
-
-    maze.cells_stack[MAZE_SIZE.1 + 3].visited = true;
-    maze.cells_stack[MAZE_SIZE.1 + 3].path = Some(CellPath::UP);
-
-    maze.visited_cells = 1;
-
-    let state = State { maze };
-
-    event::run(ctx, event_loop, state)
+    ggez::event::run(ctx, event_loop, state);
 }

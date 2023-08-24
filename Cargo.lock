@@ -1327,6 +1327,7 @@ dependencies = [
  "getrandom",
  "ggez",
  "oorandom",
+ "rand",
 ]
 
 [[package]]
