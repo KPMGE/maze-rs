@@ -1,4 +1,5 @@
 use ggez::{graphics::Color, GameError, GameResult};
+use rand::Rng;
 
 const MAZE_CELL_SIZE: (i16, i16) = (10, 10);
 const PATH_WIDTH: i16 = 3;
@@ -27,6 +28,7 @@ struct Maze {
     height: usize,
     width: usize,
     cells: Vec<Vec<Cell>>,
+    visited_cells_count: usize,
 }
 
 impl Maze {
@@ -46,6 +48,7 @@ impl Maze {
             cells,
             height,
             width,
+            visited_cells_count: 0,
         }
     }
 
@@ -57,6 +60,85 @@ impl Maze {
         if let Some(row_ref) = self.cells.get_mut(x) {
             if let Some(col_ref) = row_ref.get_mut(y) {
                 *col_ref = value;
+            }
+        }
+    }
+
+    fn build_maze(&mut self, x: usize, y: usize, cell: &mut Cell) {
+        let total_cells = self.width * self.height;
+        if total_cells == self.visited_cells_count {
+            println!("VISITED CHECK");
+            return;
+        }
+
+        let mut rng = rand::thread_rng();
+        let paths = [Path::Up, Path::Down, Path::Right, Path::Left];
+        let random_idx: usize = rng.gen_range(0..paths.len());
+
+        let random_path = paths.get(random_idx).unwrap();
+
+        match random_path {
+            Path::Up => {
+                if x == 0 {
+                    return self.build_maze(x, y, cell);
+                }
+
+                println!("UP");
+
+                let (nx, ny) = (x - 1, y);
+
+                if let Some(mut next_cell) = self.get_cell(nx, ny) {
+                    cell.visited = true;
+                    cell.paths.push(Path::Up);
+                    self.set_cell(x, y, cell.clone());
+                    self.visited_cells_count += 1;
+
+                    self.build_maze(nx, ny, &mut next_cell)
+                }
+            }
+            Path::Down => {
+                let (nx, ny) = (x + 1, y);
+                println!("DOWN");
+
+                if let Some(mut next_cell) = self.get_cell(nx, ny) {
+                    cell.visited = true;
+                    cell.paths.push(Path::Down);
+                    self.set_cell(x, y, cell.clone());
+                    self.visited_cells_count += 1;
+
+                    self.build_maze(nx, ny, &mut next_cell)
+                }
+            }
+            Path::Right => {
+                let (nx, ny) = (x, y + 1);
+                println!("RIGHT");
+
+                if let Some(mut next_cell) = self.get_cell(nx, ny) {
+                    cell.visited = true;
+                    cell.paths.push(Path::Right);
+                    self.set_cell(x, y, cell.clone());
+                    self.visited_cells_count += 1;
+
+                    self.build_maze(nx, ny, &mut next_cell)
+                }
+            }
+            Path::Left => {
+                if y <= 0 {
+                    return self.build_maze(x, y, cell);
+                }
+
+                println!("LEFT");
+
+                let (nx, ny) = (x, y - 1);
+
+                if let Some(mut next_cell) = self.get_cell(nx, ny) {
+                    cell.visited = true;
+                    cell.paths.push(Path::Left);
+                    self.set_cell(x, y, cell.clone());
+                    self.visited_cells_count += 1;
+
+                    self.build_maze(nx, ny, &mut next_cell)
+                }
             }
         }
     }
@@ -222,42 +304,10 @@ fn main() -> GameResult {
         },
     };
 
-    state.maze_renderer.maze.set_cell(
-        0,
-        1,
-        Cell {
-            visited: true,
-            paths: vec![Path::Right],
-        },
-    );
-
-    state.maze_renderer.maze.set_cell(
-        1,
-        3,
-        Cell {
-            visited: true,
-            paths: vec![Path::Up],
-        },
-    );
-
-    state.maze_renderer.maze.set_cell(
-        2,
-        5,
-        Cell {
-            visited: true,
-            paths: vec![Path::Left],
-        },
-    );
-
-
-    state.maze_renderer.maze.set_cell(
-        3,
-        6,
-        Cell {
-            visited: true,
-            paths: vec![Path::Down],
-        },
-    );
+    let x = 0;
+    let y = 0;
+    let mut start_cell = state.maze_renderer.maze.get_cell(x, y).unwrap();
+    state.maze_renderer.maze.build_maze(x, y, &mut start_cell);
 
     let window_dimensions =
         ggez::conf::WindowMode::default().dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1);
