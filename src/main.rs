@@ -3,10 +3,10 @@ use rand::Rng;
 
 const MAZE_CELL_SIZE: (i16, i16) = (9, 9);
 const PATH_WIDTH: i16 = 3;
-const MAZE_SIZE: (usize, usize) = (40, 25);
+const MAZE_SIZE: (usize, usize) = (40, 30);
 const SCREEN_SIZE: (f32, f32) = (
-    MAZE_SIZE.0 as f32 * MAZE_CELL_SIZE.0 as f32 * PATH_WIDTH as f32,
-    MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE.1 as f32 * (PATH_WIDTH as f32 + 1.0),
+    MAZE_SIZE.0 as f32 * MAZE_CELL_SIZE.0 as f32 * PATH_WIDTH as f32 + MAZE_CELL_SIZE.0 as f32,
+    MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE.1 as f32 * PATH_WIDTH as f32 + MAZE_CELL_SIZE.1 as f32,
 );
 
 #[derive(Debug, Clone)]
@@ -138,12 +138,19 @@ impl Maze {
 
         if let Some((random_cell, path)) = self.get_random_cell(x, y) {
             cell.visited = true;
-            cell.paths.push(path.clone());
             self.visited_cells.push(cell.clone());
+            cell.paths.push(path.clone());
             self.set_cell(x, y, cell.clone());
 
             return self.build_maze(random_cell.x, random_cell.y, &mut random_cell.clone());
         } else {
+            if !cell.visited {
+                cell.visited = true;
+                self.visited_cells.push(cell.clone());
+                self.set_cell(x, y, cell.clone());
+                return self.build_maze(cell.x, cell.y, cell);
+            }
+
             self.visited_cells.pop();
             if let Some(mut previous_cell) = self.visited_cells.pop() {
                 return self.build_maze(previous_cell.x, previous_cell.y, &mut previous_cell);
