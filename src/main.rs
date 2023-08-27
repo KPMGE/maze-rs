@@ -132,15 +132,11 @@ impl Maze {
     }
 
     fn build_maze(&mut self, x: usize, y: usize, cell: &mut Cell) {
-        let total_cells = self.width * self.height;
-        if total_cells == self.visited_cells.len() {
+        if self.cells.len() == self.visited_cells.len() {
             return;
         }
 
         if let Some((random_cell, path)) = self.get_random_cell(x, y) {
-            println!("x: {x}, y: {y}");
-            println!("{:?}, {:?}", random_cell, path.clone());
-
             cell.visited = true;
             cell.paths.push(path.clone());
             self.visited_cells.push(cell.clone());
@@ -148,8 +144,10 @@ impl Maze {
 
             return self.build_maze(random_cell.x, random_cell.y, &mut random_cell.clone());
         } else {
-            println!("encountered end at: {x}, {y}");
-            return;
+            self.visited_cells.pop();
+            if let Some(mut previous_cell) = self.visited_cells.pop() {
+                return self.build_maze(previous_cell.x, previous_cell.y, &mut previous_cell);
+            }
         }
     }
 }
@@ -308,11 +306,9 @@ fn main() -> GameResult {
         },
     };
 
-
     let x = 0;
     let y = 0;
     let mut start_cell = state.maze_renderer.maze.get_cell(x, y).unwrap();
-
     state.maze_renderer.maze.build_maze(x, y, &mut start_cell);
 
     let window_dimensions =
@@ -320,7 +316,6 @@ fn main() -> GameResult {
     let (ctx, event_loop) = ggez::ContextBuilder::new("maze-rs", "Kevin Carvalho")
         .window_mode(window_dimensions)
         .build()?;
-
 
     ggez::event::run(ctx, event_loop, state);
 }
