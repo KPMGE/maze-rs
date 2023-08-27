@@ -1,12 +1,12 @@
 use ggez::{graphics::Color, GameError, GameResult};
 use rand::Rng;
 
-const MAZE_CELL_SIZE: (i16, i16) = (10, 10);
+const MAZE_CELL_SIZE: (i16, i16) = (9, 9);
 const PATH_WIDTH: i16 = 3;
 const MAZE_SIZE: (usize, usize) = (40, 25);
 const SCREEN_SIZE: (f32, f32) = (
     MAZE_SIZE.0 as f32 * MAZE_CELL_SIZE.0 as f32 * PATH_WIDTH as f32,
-    MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE.1 as f32 * PATH_WIDTH as f32,
+    MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE.1 as f32 * (PATH_WIDTH as f32 + 1.0),
 );
 
 #[derive(Debug, Clone)]
@@ -138,9 +138,12 @@ impl Maze {
         }
 
         if let Some((random_cell, path)) = self.get_random_cell(x, y) {
+            println!("x: {x}, y: {y}");
+            println!("{:?}, {:?}", random_cell, path.clone());
+
+            cell.visited = true;
             cell.paths.push(path.clone());
             self.visited_cells.push(cell.clone());
-            cell.visited = true;
             self.set_cell(x, y, cell.clone());
 
             return self.build_maze(random_cell.x, random_cell.y, &mut random_cell.clone());
@@ -176,9 +179,9 @@ impl ggez::event::EventHandler for State {
             for px in 0..PATH_WIDTH {
                 for py in 0..PATH_WIDTH {
                     let rect = ggez::graphics::Rect::new(
-                        (cell.x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
-                            + (px as f32 * cell_size),
                         (cell.y as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                            + (px as f32 * cell_size),
+                        (cell.x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
                             + (py as f32 * cell_size),
                         cell_size,
                         cell_size,
@@ -201,9 +204,9 @@ impl ggez::event::EventHandler for State {
                             let py = k;
 
                             let rect = ggez::graphics::Rect::new(
-                                (cell.x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
-                                    + (px as f32 * cell_size),
                                 (cell.y as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                    + (px as f32 * cell_size),
+                                (cell.x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
                                     + (py as f32 * cell_size),
                                 cell_size,
                                 cell_size,
@@ -223,9 +226,9 @@ impl ggez::event::EventHandler for State {
                             let py = -1;
 
                             let rect = ggez::graphics::Rect::new(
-                                (cell.x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
-                                    + (px as f32 * cell_size),
                                 (cell.y as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                    + (px as f32 * cell_size),
+                                (cell.x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
                                     + (py as f32 * cell_size),
                                 cell_size,
                                 cell_size,
@@ -245,9 +248,9 @@ impl ggez::event::EventHandler for State {
                             let py = k;
 
                             let rect = ggez::graphics::Rect::new(
-                                (cell.x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
-                                    + (px as f32 * cell_size),
                                 (cell.y as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                    + (px as f32 * cell_size),
+                                (cell.x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
                                     + (py as f32 * cell_size),
                                 cell_size,
                                 cell_size,
@@ -267,9 +270,9 @@ impl ggez::event::EventHandler for State {
                             let py = PATH_WIDTH;
 
                             let rect = ggez::graphics::Rect::new(
-                                (cell.x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
-                                    + (px as f32 * cell_size),
                                 (cell.y as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
+                                    + (px as f32 * cell_size),
+                                (cell.x as f32 * cell_size * (PATH_WIDTH as f32 + 1.0))
                                     + (py as f32 * cell_size),
                                 cell_size,
                                 cell_size,
@@ -305,9 +308,11 @@ fn main() -> GameResult {
         },
     };
 
+
     let x = 0;
     let y = 0;
     let mut start_cell = state.maze_renderer.maze.get_cell(x, y).unwrap();
+
     state.maze_renderer.maze.build_maze(x, y, &mut start_cell);
 
     let window_dimensions =
@@ -315,6 +320,7 @@ fn main() -> GameResult {
     let (ctx, event_loop) = ggez::ContextBuilder::new("maze-rs", "Kevin Carvalho")
         .window_mode(window_dimensions)
         .build()?;
+
 
     ggez::event::run(ctx, event_loop, state);
 }
