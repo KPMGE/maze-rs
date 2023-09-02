@@ -41,7 +41,7 @@ impl Maze {
         self.cells.get(idx).cloned()
     }
 
-    fn set_cell(&mut self, x: usize, y: usize, value: Cell) {
+    pub fn set_cell(&mut self, x: usize, y: usize, value: Cell) {
         let idx = x * self.width + y;
         if let Some(cell_ref) = self.cells.get_mut(idx) {
             *cell_ref = value;
