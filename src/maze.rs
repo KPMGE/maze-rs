@@ -1,4 +1,5 @@
 use crate::{cell::Cell, path::Path};
+use ggez::graphics::Color;
 use rand::Rng;
 
 #[derive(Debug)]
@@ -107,6 +108,17 @@ impl Maze {
             random_cell.cell.clone().unwrap().clone(),
             random_cell.path.clone(),
         ))
+    }
+
+    pub fn draw(&self, canvas: &mut ggez::graphics::Canvas) {
+        for cell in &self.cells {
+            let color = if cell.visited {
+                Color::WHITE
+            } else {
+                Color::BLUE
+            };
+            cell.draw(canvas, color.clone());
+        }
     }
 
     pub fn build_maze(&mut self, x: usize, y: usize, cell: &mut Cell) {

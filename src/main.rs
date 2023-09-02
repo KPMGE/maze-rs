@@ -21,22 +21,12 @@ struct State {
 impl ggez::event::EventHandler for State {
     fn draw(&mut self, ctx: &mut ggez::Context) -> Result<(), GameError> {
         let mut canvas = ggez::graphics::Canvas::from_frame(ctx, Color::BLACK);
-
-        for cell in &self.maze.cells {
-            let color = if cell.visited {
-                Color::WHITE
-            } else {
-                Color::BLUE
-            };
-            cell.draw(&mut canvas, color.clone());
-        }
-
+        self.maze.draw(&mut canvas);
         canvas.finish(ctx)?;
-
         Ok(())
     }
 
-    fn update(&mut self, ctx: &mut ggez::Context) -> Result<(), GameError> {
+    fn update(&mut self, _ctx: &mut ggez::Context) -> Result<(), GameError> {
         Ok(())
     }
 }
