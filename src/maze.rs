@@ -109,7 +109,7 @@ impl Maze {
         ))
     }
 
-    fn build_maze(&mut self, x: usize, y: usize, cell: &mut Cell) {
+    pub fn build_maze(&mut self, x: usize, y: usize, cell: &mut Cell) {
         if self.cells.len() == self.visited_cells.len() {
             return;
         }
