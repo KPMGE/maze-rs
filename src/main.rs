@@ -1,14 +1,14 @@
 use ggez::{graphics::Color, GameError, GameResult};
 
 mod cell;
-mod path;
 mod maze;
+mod path;
 
 use maze::Maze;
 
 const MAZE_CELL_SIZE: f32 = 9.0;
 const PATH_WIDTH: usize = 3;
-    const MAZE_SIZE: (usize, usize) = (40, 25);
+const MAZE_SIZE: (usize, usize) = (40, 25);
 const SCREEN_SIZE: (f32, f32) = (
     MAZE_SIZE.0 as f32 * MAZE_CELL_SIZE as f32 * (PATH_WIDTH + 1) as f32 - MAZE_CELL_SIZE as f32,
     MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE as f32 * (PATH_WIDTH + 1) as f32 - MAZE_CELL_SIZE as f32,
@@ -16,7 +16,6 @@ const SCREEN_SIZE: (f32, f32) = (
 
 struct State {
     maze: Maze,
-    counter: i32
 }
 
 impl ggez::event::EventHandler for State {
@@ -28,14 +27,26 @@ impl ggez::event::EventHandler for State {
     }
 
     fn update(&mut self, _ctx: &mut ggez::Context) -> Result<(), GameError> {
-        if self.counter >= self.maze.width as i32 {
+        if self.maze.cells.len() == self.maze.visited_cells.len() {
             return Ok(());
         }
 
-        let mut cell = self.maze.get_cell(0 as usize, self.counter as usize).unwrap();
-        cell.visited = true;
-        self.maze.set_cell(cell.x, cell.y, cell.clone());
-        self.counter += 1;
+        let mut cell = self
+            .maze
+            .visited_cells
+            .pop()
+            .expect("the visited_cells stack must have at least 1 cell");
+
+        if let Some((random_cell, path)) = self.maze.get_random_cell(cell.x, cell.y) {
+            cell.visited = true;
+            cell.paths.push(path);
+            self.maze.set_cell(cell.x, cell.y, cell.clone());
+
+            self.maze.visited_cells.push(cell.clone());
+            self.maze.visited_cells.push(random_cell.clone());
+        } else {
+            self.maze.visited_cells.pop();
+        }
 
         Ok(())
     }
@@ -43,19 +54,13 @@ impl ggez::event::EventHandler for State {
 
 fn main() -> GameResult {
     let mut state = State {
-        maze: Maze::new(
-            MAZE_SIZE.0,
-            MAZE_SIZE.1,
-            PATH_WIDTH, 
-            MAZE_CELL_SIZE
-        ),
-        counter: 0
+        maze: Maze::new(MAZE_SIZE.0, MAZE_SIZE.1, PATH_WIDTH, MAZE_CELL_SIZE),
     };
 
     let x = 0;
     let y = 0;
-    let mut start_cell = state.maze.get_cell(x, y).unwrap();
-    // state.maze.build_maze(x, y, &mut start_cell);
+    let start_cell = state.maze.get_cell(x, y).unwrap();
+    state.maze.visited_cells.push(start_cell);
 
     let window_dimensions =
         ggez::conf::WindowMode::default().dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1);
