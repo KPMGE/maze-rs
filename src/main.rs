@@ -6,13 +6,13 @@ mod path;
 
 use maze::Maze;
 
-const FPS: u32 = 60;
+const FPS: u32 = 3;
 const MAZE_CELL_SIZE: f32 = 9.0;
 const PATH_WIDTH: usize = 3;
 const MAZE_SIZE: (usize, usize) = (40, 25);
 const SCREEN_SIZE: (f32, f32) = (
-    MAZE_SIZE.0 as f32 * MAZE_CELL_SIZE as f32 * (PATH_WIDTH + 1) as f32 - MAZE_CELL_SIZE as f32,
-    MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE as f32 * (PATH_WIDTH + 1) as f32 - MAZE_CELL_SIZE as f32,
+    MAZE_SIZE.0 as f32 * MAZE_CELL_SIZE * (PATH_WIDTH + 1) as f32 - MAZE_CELL_SIZE,
+    MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE * (PATH_WIDTH + 1) as f32 - MAZE_CELL_SIZE
 );
 
 struct State {

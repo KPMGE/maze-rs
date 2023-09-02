@@ -12,6 +12,12 @@ pub struct Cell {
     pub size: f32,
 }
 
+impl PartialEq<Cell> for Cell {
+    fn eq(&self, other: &Cell) -> bool {
+        self.x == other.x && self.y == other.y
+    }
+}
+
 impl Cell {
     pub fn draw(&self, canvas: &mut graphics::Canvas, color: Color) {
         for px in 0..self.path_width {

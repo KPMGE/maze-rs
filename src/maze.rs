@@ -86,18 +86,14 @@ impl Maze {
             .iter()
             .filter(|cell_path| {
                 if let Some(c) = cell_path.cell.clone() {
-                    if c.visited {
-                        return false;
-                    } else {
-                        return true;
-                    }
+                    return !c.visited;
                 }
 
-                return false;
+                false
             })
             .collect();
 
-        if available_cells.len() == 0 {
+        if available_cells.is_empty() {
             return None;
         }
 
@@ -111,40 +107,21 @@ impl Maze {
     }
 
     pub fn draw(&self, canvas: &mut ggez::graphics::Canvas) {
+        let current_cell = self
+            .visited_cells
+            .last()
+            .expect("the visited_cells stack must have at least 1 cell");
+
         for cell in &self.cells {
-            let color = if cell.visited {
+            let color = if cell == current_cell {
+                Color::GREEN
+            } else if cell.visited {
                 Color::WHITE
             } else {
                 Color::BLUE
             };
-            cell.draw(canvas, color.clone());
-        }
-    }
 
-    pub fn build_maze(&mut self, x: usize, y: usize, cell: &mut Cell) {
-        if self.cells.len() == self.visited_cells.len() {
-            return;
-        }
-
-        if let Some((random_cell, path)) = self.get_random_cell(x, y) {
-            cell.visited = true;
-            self.visited_cells.push(cell.clone());
-            cell.paths.push(path.clone());
-            self.set_cell(x, y, cell.clone());
-
-            return self.build_maze(random_cell.x, random_cell.y, &mut random_cell.clone());
-        } else {
-            if !cell.visited {
-                cell.visited = true;
-                self.visited_cells.push(cell.clone());
-                self.set_cell(x, y, cell.clone());
-                return self.build_maze(cell.x, cell.y, cell);
-            }
-
-            self.visited_cells.pop();
-            if let Some(mut previous_cell) = self.visited_cells.pop() {
-                return self.build_maze(previous_cell.x, previous_cell.y, &mut previous_cell);
-            }
+            cell.draw(canvas, color);
         }
     }
 }
