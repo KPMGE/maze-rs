@@ -6,7 +6,7 @@ mod path;
 
 use maze::Maze;
 
-const FPS: u32 = 3;
+const FPS: u32 = 4;
 const MAZE_CELL_SIZE: f32 = 9.0;
 const PATH_WIDTH: usize = 3;
 const MAZE_SIZE: (usize, usize) = (40, 25);
@@ -48,6 +48,8 @@ impl ggez::event::EventHandler for State {
                 self.maze.visited_cells.push(cell.clone());
                 self.maze.visited_cells.push(random_cell.clone());
             } else {
+                cell.visited = true;
+                self.maze.set_cell(cell.x, cell.y, cell.clone());
                 self.maze.visited_cells.pop();
             }
         }
