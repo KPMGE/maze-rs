@@ -6,6 +6,7 @@ mod path;
 
 use maze::Maze;
 
+const FPS: u32 = 60;
 const MAZE_CELL_SIZE: f32 = 9.0;
 const PATH_WIDTH: usize = 3;
 const MAZE_SIZE: (usize, usize) = (40, 25);
@@ -23,29 +24,32 @@ impl ggez::event::EventHandler for State {
         let mut canvas = ggez::graphics::Canvas::from_frame(ctx, Color::BLACK);
         self.maze.draw(&mut canvas);
         canvas.finish(ctx)?;
+        ggez::timer::yield_now();
         Ok(())
     }
 
-    fn update(&mut self, _ctx: &mut ggez::Context) -> Result<(), GameError> {
-        if self.maze.cells.len() == self.maze.visited_cells.len() {
-            return Ok(());
-        }
+    fn update(&mut self, ctx: &mut ggez::Context) -> Result<(), GameError> {
+        while ctx.time.check_update_time(FPS) {
+            if self.maze.cells.len() == self.maze.visited_cells.len() {
+                return Ok(());
+            }
 
-        let mut cell = self
-            .maze
-            .visited_cells
-            .pop()
-            .expect("the visited_cells stack must have at least 1 cell");
+            let mut cell = self
+                .maze
+                .visited_cells
+                .pop()
+                .expect("the visited_cells stack must have at least 1 cell");
 
-        if let Some((random_cell, path)) = self.maze.get_random_cell(cell.x, cell.y) {
-            cell.visited = true;
-            cell.paths.push(path);
-            self.maze.set_cell(cell.x, cell.y, cell.clone());
+            if let Some((random_cell, path)) = self.maze.get_random_cell(cell.x, cell.y) {
+                cell.visited = true;
+                cell.paths.push(path);
+                self.maze.set_cell(cell.x, cell.y, cell.clone());
 
-            self.maze.visited_cells.push(cell.clone());
-            self.maze.visited_cells.push(random_cell.clone());
-        } else {
-            self.maze.visited_cells.pop();
+                self.maze.visited_cells.push(cell.clone());
+                self.maze.visited_cells.push(random_cell.clone());
+            } else {
+                self.maze.visited_cells.pop();
+            }
         }
 
         Ok(())
