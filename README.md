@@ -30,4 +30,4 @@ Have fun! :tada:
 
 
 ### Results
-!()[https://github.com/KPMGE/maze-rs/blob/main/assets/maze.gif]
+![](https://github.com/KPMGE/maze-rs/blob/main/assets/maze.gif)
