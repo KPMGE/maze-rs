@@ -6,17 +6,18 @@ mod path;
 
 use maze::Maze;
 
-const FPS: u32 = 4;
+const FPS: u32 = 60;
 const MAZE_CELL_SIZE: f32 = 9.0;
 const PATH_WIDTH: usize = 3;
-const MAZE_SIZE: (usize, usize) = (40, 25);
+const MAZE_SIZE: (usize, usize) = (30, 18);
 const SCREEN_SIZE: (f32, f32) = (
     MAZE_SIZE.0 as f32 * MAZE_CELL_SIZE * (PATH_WIDTH + 1) as f32 - MAZE_CELL_SIZE,
-    MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE * (PATH_WIDTH + 1) as f32 - MAZE_CELL_SIZE
+    MAZE_SIZE.1 as f32 * MAZE_CELL_SIZE * (PATH_WIDTH + 1) as f32 - MAZE_CELL_SIZE,
 );
 
 struct State {
     maze: Maze,
+    visited_cells_count: usize,
 }
 
 impl ggez::event::EventHandler for State {
@@ -30,7 +31,7 @@ impl ggez::event::EventHandler for State {
 
     fn update(&mut self, ctx: &mut ggez::Context) -> Result<(), GameError> {
         while ctx.time.check_update_time(FPS) {
-            if self.maze.cells.len() == self.maze.visited_cells.len() {
+            if self.maze.cells.len() == self.visited_cells_count {
                 return Ok(());
             }
 
@@ -40,17 +41,19 @@ impl ggez::event::EventHandler for State {
                 .pop()
                 .expect("the visited_cells stack must have at least 1 cell");
 
-            if let Some((random_cell, path)) = self.maze.get_random_cell(cell.x, cell.y) {
+            if let Some((mut random_cell, path)) = self.maze.get_random_cell(cell.x, cell.y) {
                 cell.visited = true;
                 cell.paths.push(path);
                 self.maze.set_cell(cell.x, cell.y, cell.clone());
 
+                self.visited_cells_count += 1;
+
+                random_cell.visited = true;
+                self.maze
+                    .set_cell(random_cell.x, random_cell.y, random_cell.clone());
+
                 self.maze.visited_cells.push(cell.clone());
                 self.maze.visited_cells.push(random_cell.clone());
-            } else {
-                cell.visited = true;
-                self.maze.set_cell(cell.x, cell.y, cell.clone());
-                self.maze.visited_cells.pop();
             }
         }
 
@@ -61,6 +64,7 @@ impl ggez::event::EventHandler for State {
 fn main() -> GameResult {
     let mut state = State {
         maze: Maze::new(MAZE_SIZE.0, MAZE_SIZE.1, PATH_WIDTH, MAZE_CELL_SIZE),
+        visited_cells_count: 1,
     };
 
     let x = 0;
