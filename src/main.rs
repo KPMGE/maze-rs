@@ -6,7 +6,7 @@ mod path;
 
 use maze::Maze;
 
-const FPS: u32 = 60;
+const FPS: u32 = 6;
 const MAZE_CELL_SIZE: f32 = 9.0;
 const PATH_WIDTH: usize = 3;
 const MAZE_SIZE: (usize, usize) = (30, 18);
