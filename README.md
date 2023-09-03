@@ -2,6 +2,9 @@
 
 This is a simple maze-generator program made in rust
 
+### Results
+![](https://github.com/KPMGE/maze-rs/blob/main/assets/maze.gif)
+
 ### How do i run it? :running:
 In order to run this project, first make sure you have the [rust programming language](https://www.rust-lang.org/)
 properly installed. If so, you can run this project with the following command: 
@@ -27,7 +30,3 @@ Now you can run it directly:
 ```
 
 Have fun! :tada:
-
-
-### Results
-![](https://github.com/KPMGE/maze-rs/blob/main/assets/maze.gif)
