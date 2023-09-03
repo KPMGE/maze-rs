@@ -34,7 +34,7 @@ impl Maze {
             width,
             visited_cells: Vec::new(),
             cell_size,
-            cell_path_width
+            cell_path_width,
         }
     }
 
