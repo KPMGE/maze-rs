@@ -6,6 +6,8 @@ use rand::Rng;
 pub struct Maze {
     pub height: usize,
     pub width: usize,
+    pub cell_size: f32,
+    pub cell_path_width: usize,
     pub cells: Vec<Cell>,
     pub visited_cells: Vec<Cell>,
 }
@@ -21,8 +23,6 @@ impl Maze {
                     x,
                     y,
                     paths: Vec::new(),
-                    path_width: cell_path_width,
-                    size: cell_size,
                 };
                 cells.push(cell);
             }
@@ -33,6 +33,8 @@ impl Maze {
             height,
             width,
             visited_cells: Vec::new(),
+            cell_size,
+            cell_path_width
         }
     }
 
@@ -121,7 +123,7 @@ impl Maze {
                 Color::BLUE
             };
 
-            cell.draw(canvas, color);
+            cell.draw(canvas, color, self.cell_size, self.cell_path_width);
         }
     }
 }

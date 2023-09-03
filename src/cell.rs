@@ -8,8 +8,6 @@ pub struct Cell {
     pub x: usize,
     pub y: usize,
     pub paths: Vec<Path>,
-    pub path_width: usize,
-    pub size: f32,
 }
 
 impl PartialEq<Cell> for Cell {
@@ -19,16 +17,16 @@ impl PartialEq<Cell> for Cell {
 }
 
 impl Cell {
-    pub fn draw(&self, canvas: &mut graphics::Canvas, color: Color) {
-        for px in 0..self.path_width {
-            for py in 0..self.path_width {
+    pub fn draw(&self, canvas: &mut graphics::Canvas, color: Color, cell_size: f32, path_width: usize) {
+        for px in 0..path_width {
+            for py in 0..path_width {
                 let rect = ggez::graphics::Rect::new(
-                    (self.y as f32 * self.size * (self.path_width as f32 + 1.0))
-                        + (px as f32 * self.size),
-                    (self.x as f32 * self.size * (self.path_width as f32 + 1.0))
-                        + (py as f32 * self.size),
-                    self.size,
-                    self.size,
+                    (self.y as f32 * cell_size * (path_width as f32 + 1.0))
+                        + (px as f32 * cell_size),
+                    (self.x as f32 * cell_size * (path_width as f32 + 1.0))
+                        + (py as f32 * cell_size),
+                    cell_size,
+                    cell_size,
                 );
 
                 canvas.draw(
@@ -43,17 +41,17 @@ impl Cell {
         for path in &self.paths {
             match path {
                 Path::Right => {
-                    for k in 0..self.path_width {
-                        let px = self.path_width;
+                    for k in 0..path_width {
+                        let px = path_width;
                         let py = k;
 
                         let rect = ggez::graphics::Rect::new(
-                            (self.y as f32 * self.size * (self.path_width as f32 + 1.0))
-                                + (px as f32 * self.size),
-                            (self.x as f32 * self.size * (self.path_width as f32 + 1.0))
-                                + (py as f32 * self.size),
-                            self.size,
-                            self.size,
+                            (self.y as f32 * cell_size * (path_width as f32 + 1.0))
+                                + (px as f32 * cell_size),
+                            (self.x as f32 * cell_size * (path_width as f32 + 1.0))
+                                + (py as f32 * cell_size),
+                            cell_size,
+                            cell_size,
                         );
 
                         canvas.draw(
@@ -65,17 +63,17 @@ impl Cell {
                     }
                 }
                 Path::Up => {
-                    for k in 0..self.path_width {
+                    for k in 0..path_width {
                         let px = k;
                         let py = -1;
 
                         let rect = ggez::graphics::Rect::new(
-                            (self.y as f32 * self.size * (self.path_width as f32 + 1.0))
-                                + (px as f32 * self.size),
-                            (self.x as f32 * self.size * (self.path_width as f32 + 1.0))
-                                + (py as f32 * self.size),
-                            self.size,
-                            self.size,
+                            (self.y as f32 * cell_size * (path_width as f32 + 1.0))
+                                + (px as f32 * cell_size),
+                            (self.x as f32 * cell_size * (path_width as f32 + 1.0))
+                                + (py as f32 * cell_size),
+                            cell_size,
+                            cell_size,
                         );
 
                         canvas.draw(
@@ -87,17 +85,17 @@ impl Cell {
                     }
                 }
                 Path::Left => {
-                    for k in 0..self.path_width {
+                    for k in 0..path_width {
                         let px = -1;
                         let py = k;
 
                         let rect = ggez::graphics::Rect::new(
-                            (self.y as f32 * self.size * (self.path_width as f32 + 1.0))
-                                + (px as f32 * self.size),
-                            (self.x as f32 * self.size * (self.path_width as f32 + 1.0))
-                                + (py as f32 * self.size),
-                            self.size,
-                            self.size,
+                            (self.y as f32 * cell_size * (path_width as f32 + 1.0))
+                                + (px as f32 * cell_size),
+                            (self.x as f32 * cell_size * (path_width as f32 + 1.0))
+                                + (py as f32 * cell_size),
+                            cell_size,
+                            cell_size,
                         );
 
                         canvas.draw(
@@ -109,17 +107,17 @@ impl Cell {
                     }
                 }
                 Path::Down => {
-                    for k in 0..self.path_width {
+                    for k in 0..path_width {
                         let px = k;
-                        let py = self.path_width;
+                        let py = path_width;
 
                         let rect = ggez::graphics::Rect::new(
-                            (self.y as f32 * self.size * (self.path_width as f32 + 1.0))
-                                + (px as f32 * self.size),
-                            (self.x as f32 * self.size * (self.path_width as f32 + 1.0))
-                                + (py as f32 * self.size),
-                            self.size,
-                            self.size,
+                            (self.y as f32 * cell_size * (path_width as f32 + 1.0))
+                                + (px as f32 * cell_size),
+                            (self.x as f32 * cell_size * (path_width as f32 + 1.0))
+                                + (py as f32 * cell_size),
+                            cell_size,
+                            cell_size,
                         );
 
                         canvas.draw(
